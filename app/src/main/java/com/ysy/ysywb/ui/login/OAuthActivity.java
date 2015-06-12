@@ -2,10 +2,14 @@ package com.ysy.ysywb.ui.login;
 
 import android.app.ActionBar;
 import android.app.Activity;
+import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentActivity;
 import android.text.TextUtils;
@@ -26,11 +30,16 @@ import com.ysy.ysywb.R;
 import com.ysy.ysywb.bean.AccountBean;
 import com.ysy.ysywb.bean.UserBean;
 import com.ysy.ysywb.dao.URLHelper;
+import com.ysy.ysywb.dao.login.OAuthDao;
+import com.ysy.ysywb.support.database.AccountDBTask;
+import com.ysy.ysywb.support.debug.AppLogger;
 import com.ysy.ysywb.support.error.WeiboException;
 import com.ysy.ysywb.support.lib.MyAsyncTask;
 import com.ysy.ysywb.support.utils.Utility;
+import com.ysy.ysywb.ui.interfaces.AbstractAppActivity;
 
 import java.io.UnsupportedEncodingException;
+import java.lang.ref.WeakReference;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
@@ -42,7 +51,7 @@ import java.util.Set;
 /**
  * Created by ggec5486 on 2015/6/8.
  */
-public class OAuthActivity extends FragmentActivity {
+public class OAuthActivity extends AbstractAppActivity {
 
     private static final String ACTION_OPEN_FROM_APP_INNER = "org.qii.weiciyuan:accountactivity";
 
@@ -186,7 +195,7 @@ public class OAuthActivity extends FragmentActivity {
             String access_token = values.getString("access_token");
             String expires_time = values.getString("expires_in");
             setResult(RESULT_OK, intent);
-            // new OAuthTask(this).execute(access_token, expires_time);
+            new OAuthTask(this).execute(access_token, expires_time);
         } else {
             Toast.makeText(OAuthActivity.this, getString(R.string.you_cancel_login),
                     Toast.LENGTH_SHORT).show();
@@ -198,18 +207,76 @@ public class OAuthActivity extends FragmentActivity {
 
         private WeiboException e;
         private ProgressFragment progressFragment = ProgressFragment.newInstance();
+        private WeakReference<OAuthActivity> oAuthActivityWeakReference;
+
+        private OAuthTask(OAuthActivity activity) {
+            oAuthActivityWeakReference = new WeakReference<OAuthActivity>(activity);
+        }
+
+        @Override
+        protected void onPreExecute() {
+            progressFragment.setAsyncTask(this);
+            OAuthActivity activity = oAuthActivityWeakReference.get();
+            if (activity != null) {
+                progressFragment.show(activity.getSupportFragmentManager(), "");
+            }
+        }
 
         @Override
         protected DBResult doInBackground(String... params) {
-            return null;
+
+            String token = params[0];
+            long expiresInSeconds = Long.valueOf(params[1]);
+
+            try {
+                UserBean user = new OAuthDao(token).getOAuthUserInfo();
+                AccountBean account = new AccountBean();
+                account.setAccess_token(token);
+                account.setExpires_time(System.currentTimeMillis() + expiresInSeconds * 1000);
+                account.setInfo(user);
+                AppLogger
+                        .e("token expires in " + Utility.calcTokenExpiresInDays(account) + " days");
+                return AccountDBTask.addOrUpdateAccount(account, false);
+            } catch (WeiboException e) {
+                AppLogger.e(e.getError());
+                this.e = e;
+                cancel(true);
+                return null;
+            }
         }
     }
 
-    public static class ProgressFragment extends DialogFragment{
+    public static class ProgressFragment extends DialogFragment {
         MyAsyncTask asyncTask = null;
 
-        public static ProgressFragment newInstance(){
+        public static ProgressFragment newInstance() {
+            ProgressFragment frag = new ProgressFragment();
+            frag.setRetainInstance(true);
+            Bundle args = new Bundle();
+            frag.setArguments(args);
+            return frag;
+        }
 
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            ProgressDialog dialog = new ProgressDialog(getActivity());
+            dialog.setMessage(getString(R.string.oauthing));
+            dialog.setIndeterminate(false);
+            dialog.setCancelable(true);
+            return dialog;
+        }
+
+        @Override
+        public void onCancel(DialogInterface dialog) {
+            if (asyncTask != null) {
+                asyncTask.cancel(true);
+            }
+            super.onCancel(dialog);
+        }
+
+        void setAsyncTask(MyAsyncTask task) {
+            asyncTask = task;
         }
     }
 

@@ -5,6 +5,8 @@ import android.text.TextUtils;
 
 import com.ysy.ysywb.bean.AccountBean;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -12,6 +14,7 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by ggec5486 on 2015/6/9.
@@ -118,4 +121,23 @@ public class Utility {
 
         return sb.toString();
     }
+
+
+    public static void closeSilently(Closeable closeable) {
+        if (closeable != null) {
+            try {
+                closeable.close();
+            } catch (IOException ignored) {
+
+            }
+        }
+    }
+
+    public static long calcTokenExpiresInDays(AccountBean account) {
+        long days = TimeUnit.MILLISECONDS
+                .toDays(account.getExpires_time() - System.currentTimeMillis());
+        return days;
+    }
+
+
 }

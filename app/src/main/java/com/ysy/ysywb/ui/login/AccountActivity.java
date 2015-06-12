@@ -3,6 +3,8 @@ package com.ysy.ysywb.ui.login;
 import android.app.AlertDialog;
 import android.app.Application;
 import android.app.LoaderManager;
+import android.content.AsyncTaskLoader;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.Loader;
@@ -24,7 +26,9 @@ import android.widget.TextView;
 
 import com.ysy.ysywb.R;
 import com.ysy.ysywb.bean.AccountBean;
+import com.ysy.ysywb.support.database.AccountDBTask;
 import com.ysy.ysywb.support.utils.Utility;
+import com.ysy.ysywb.ui.interfaces.AbstractAppActivity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +37,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by ggec5486 on 2015/6/9.
  */
-public class AccountActivity extends FragmentActivity implements
+public class AccountActivity extends AbstractAppActivity implements
         LoaderManager.LoaderCallbacks<List<AccountBean>> {
 
     private static final String ACTION_OPEN_FROM_APP_INNER = "org.qii.weiciyuan:accountactivity";
@@ -49,7 +53,6 @@ public class AccountActivity extends FragmentActivity implements
     private List<AccountBean> accountList = new ArrayList<AccountBean>();
 
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -62,7 +65,7 @@ public class AccountActivity extends FragmentActivity implements
         listView.setAdapter(listAdapter);
         listView.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE_MODAL);
         listView.setMultiChoiceModeListener(new AccountMultiChoiceModeListener());
-        //getLoaderManager().initLoader(LOADER_ID, null, this);
+        getLoaderManager().initLoader(LOADER_ID, null, this);
     }
 
     @Override
@@ -132,17 +135,19 @@ public class AccountActivity extends FragmentActivity implements
 
     @Override
     public Loader<List<AccountBean>> onCreateLoader(int id, Bundle args) {
-        return null;
+        return new AccountDBLoader(AccountActivity.this, args);
     }
 
     @Override
     public void onLoadFinished(Loader<List<AccountBean>> loader, List<AccountBean> data) {
-
+        accountList = data;
+        listAdapter.notifyDataSetChanged();
     }
 
     @Override
     public void onLoaderReset(Loader<List<AccountBean>> loader) {
-
+        accountList = new ArrayList<AccountBean>();
+        listAdapter.notifyDataSetChanged();
     }
 
 
@@ -236,17 +241,20 @@ public class AccountActivity extends FragmentActivity implements
                 holder = (ViewHolder) convertView.getTag();
             }
             holder.root.setBackgroundColor(defaultBG);
+
             if (listView.getCheckedItemPositions().get(position)) {
                 holder.root.setBackgroundColor(checkedBG);
             }
+
             if (accountList.get(position).getInfo() != null) {
                 holder.name.setText(accountList.get(position).getInfo().getScreen_name());
             } else {
-                holder.name.setText(accountList.get(position).getUsernick());
+                getBitmapDownloader()
+                        .downloadAvatar(holder.avatar, accountList.get(position).getInfo(), false);
             }
 
             if (!TextUtils.isEmpty(accountList.get(position).getAvatar_url())) {
-
+                holder.avatar.setImageResource(R.drawable.ic_ysywb);
             }
             holder.tokenInvalid.setVisibility(!Utility.isTokenValid(accountList.get(position)) ? View.VISIBLE : View.GONE);
             return convertView;
@@ -258,5 +266,23 @@ public class AccountActivity extends FragmentActivity implements
         TextView name;
         ImageView avatar;
         TextView tokenInvalid;
+    }
+
+    private static class AccountDBLoader extends AsyncTaskLoader<List<AccountBean>> {
+
+        public AccountDBLoader(Context context, Bundle args) {
+            super(context);
+        }
+
+        @Override
+        protected void onStartLoading() {
+            super.onStartLoading();
+            forceLoad();
+        }
+
+        @Override
+        public List<AccountBean> loadInBackground() {
+            return AccountDBTask.getAccountList();
+        }
     }
 }
