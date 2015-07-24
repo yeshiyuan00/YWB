@@ -1,12 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="Encoding">
-    <file url="file://$PROJECT_DIR$/app/libs/gson-2.2.4.jar" charset="GBK" />
-    <file url="file://$PROJECT_DIR$/app/src/main/java/com/ysy/ysywb/dao/login/OAuthDao.java" charset="GBK" />
-    <file url="file://$PROJECT_DIR$/app/src/main/java/com/ysy/ysywb/support/database/table/AccountTable.java" charset="GBK" />
-    <file url="file://$PROJECT_DIR$/app/src/main/java/com/ysy/ysywb/support/debug/AppLogger.java" charset="GBK" />
-    <file url="file://$PROJECT_DIR$/app/src/main/java/com/ysy/ysywb/support/error/WeiboException.java" charset="GBK" />
-    <file url="file://$PROJECT_DIR$/app/src/main/java/com/ysy/ysywb/support/http/HttpMethod.java" charset="GBK" />
     <file url="PROJECT" charset="UTF-8" />
   </component>
 </project>

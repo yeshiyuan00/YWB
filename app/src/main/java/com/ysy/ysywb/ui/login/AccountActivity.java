@@ -1,7 +1,6 @@
 package com.ysy.ysywb.ui.login;
 
 import android.app.AlertDialog;
-import android.app.Application;
 import android.app.LoaderManager;
 import android.content.AsyncTaskLoader;
 import android.content.Context;
@@ -9,7 +8,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.Loader;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
 import android.text.TextUtils;
 import android.view.ActionMode;
 import android.view.LayoutInflater;
@@ -249,12 +247,12 @@ public class AccountActivity extends AbstractAppActivity implements
             if (accountList.get(position).getInfo() != null) {
                 holder.name.setText(accountList.get(position).getInfo().getScreen_name());
             } else {
-                getBitmapDownloader()
-                        .downloadAvatar(holder.avatar, accountList.get(position).getInfo(), false);
+                holder.name.setText(accountList.get(position).getUsernick());
             }
 
             if (!TextUtils.isEmpty(accountList.get(position).getAvatar_url())) {
-                holder.avatar.setImageResource(R.drawable.ic_ysywb);
+                getBitmapDownloader()
+                        .downloadAvatar(holder.avatar, accountList.get(position).getInfo(), false);
             }
             holder.tokenInvalid.setVisibility(!Utility.isTokenValid(accountList.get(position)) ? View.VISIBLE : View.GONE);
             return convertView;

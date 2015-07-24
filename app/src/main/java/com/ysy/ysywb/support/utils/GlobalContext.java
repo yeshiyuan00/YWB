@@ -4,26 +4,12 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.Application;
 import android.content.Context;
-import android.content.res.AssetManager;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Handler;
-import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.LruCache;
-import android.view.Display;
-
 
 import com.ysy.ysywb.bean.AccountBean;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * User: Jiang Qi
@@ -57,6 +43,35 @@ public final class GlobalContext extends Application {
         return globalContext;
     }
 
+    public Activity getActivity() {
+        return activity;
+    }
 
+    public void setActivity(Activity activity) {
+        this.activity = activity;
+    }
+
+
+    public synchronized LruCache<String, Bitmap> getBitmapCache() {
+        if (appBitmapCache == null) {
+            buildCache();
+        }
+        return appBitmapCache;
+    }
+
+    private void buildCache() {
+        int memClass = ((ActivityManager) getSystemService(
+                Context.ACTIVITY_SERVICE)).getMemoryClass();
+
+        int cacheSize = Math.max(1024 * 1024 * 8, 1024 * 1024 * memClass / 5);
+
+        appBitmapCache = new LruCache<String, Bitmap>(cacheSize) {
+            @Override
+            protected int sizeOf(String key, Bitmap bitmap) {
+
+                return bitmap.getByteCount();
+            }
+        };
+    }
 }
 
