@@ -21,15 +21,20 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.ysy.ysywb.R;
 import com.ysy.ysywb.bean.AccountBean;
 import com.ysy.ysywb.support.database.AccountDBTask;
+import com.ysy.ysywb.support.lib.changelogdialog.ChangeLogDialog;
+import com.ysy.ysywb.support.settinghelper.SettingUtility;
 import com.ysy.ysywb.support.utils.Utility;
 import com.ysy.ysywb.ui.interfaces.AbstractAppActivity;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -53,10 +58,12 @@ public class AccountActivity extends AbstractAppActivity implements
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        String action = getIntent() != null ? getIntent().getAction() : null;
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.accountactivity_layout);
 
-
+        getActionBar().setTitle(getString(R.string.app_name));
         listAdapter = new AccountAdapter();
         listView = (ListView) findViewById(R.id.listView);
         listView.setOnItemClickListener(new AccountListItemClickListener());
@@ -64,6 +71,22 @@ public class AccountActivity extends AbstractAppActivity implements
         listView.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE_MODAL);
         listView.setMultiChoiceModeListener(new AccountMultiChoiceModeListener());
         getLoaderManager().initLoader(LOADER_ID, null, this);
+
+        if (SettingUtility.firstStart()) {
+            showChangeLogDialog();
+        }
+
+        if (ACTION_OPEN_FROM_APP_INNER_REFRESH_TOKEN.equals(action)) {
+            showAddAccountDialog();
+            AccountBean accountBean = getIntent().getParcelableExtra(REFRESH_ACTION_EXTRA);
+            Toast.makeText(this, String.format(getString(R.string.account_token_has_expired),
+                    accountBean.getUsernick()), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void showChangeLogDialog() {
+        ChangeLogDialog changeLogDialog = new ChangeLogDialog(this);
+        changeLogDialog.show();
     }
 
     @Override
@@ -148,6 +171,15 @@ public class AccountActivity extends AbstractAppActivity implements
         listAdapter.notifyDataSetChanged();
     }
 
+    private void remove() {
+        Set<String> set = new HashSet<String>();
+        long[] ids = listView.getCheckedItemIds();
+        for (long id : ids) {
+            set.add(String.valueOf(id));
+        }
+        // accountList = AccountDBTask.removeAndGetNewAccountList(set);
+        listAdapter.notifyDataSetChanged();
+    }
 
     private class AccountListItemClickListener implements AdapterView.OnItemClickListener {
 
@@ -157,7 +189,11 @@ public class AccountActivity extends AbstractAppActivity implements
                 showAddAccountDialog();
                 return;
             }
-
+//            Intent intent = MainTimeLineActivity.newIntent(accountList.get(position));
+//            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+//            startActivity(intent);
+//            finish();
+            Toast.makeText(AccountActivity.this, "正在开发中。。。", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -165,7 +201,8 @@ public class AccountActivity extends AbstractAppActivity implements
 
         @Override
         public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-
+            mode.getMenuInflater().inflate(R.menu.contextual_menu_accountactivity, menu);
+            mode.setTitle(getString(R.string.account_management));
             return true;
         }
 
@@ -176,7 +213,12 @@ public class AccountActivity extends AbstractAppActivity implements
 
         @Override
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-
+            switch (item.getItemId()) {
+                case R.id.menu_remove_account:
+                    remove();
+                    mode.finish();
+                    return true;
+            }
             return false;
         }
 
@@ -192,7 +234,7 @@ public class AccountActivity extends AbstractAppActivity implements
         }
     }
 
-    class AccountAdapter extends BaseAdapter {
+    private class AccountAdapter extends BaseAdapter {
 
         private int checkedBG;
         private int defaultBG;

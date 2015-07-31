@@ -70,32 +70,39 @@ public class TimeLineBitmapDownloader {
     private void displayImageView(final ImageView view, final String urlKey,
                                   final FileLocationMethod method, boolean isFling,
                                   boolean isMultiPictures) {
+
         view.clearAnimation();
         if (!shouldReloadPicture(view, urlKey)) {
+
             return;
         }
 
         final Bitmap bitmap = getBitmapFromMemCache(urlKey);
         if (bitmap != null) {
+            System.out.println("加载头像成功");
             view.setImageBitmap(bitmap);
             view.setTag(urlKey);
             if (view.getAlpha() != 1.0f) {
                 view.setAlpha(1.0f);
             }
             cancelPotentialDownload(urlKey, view);
-        }else {
-            if(isFling){
+        } else {
+            System.out.println("加载头像失败");
+            if (isFling) {
                 view.setImageResource(defaultPictureResId);
+                System.out.println("加载头像失败:isFling");
                 return;
             }
 
             if (!cancelPotentialDownload(urlKey, view)) {
+                System.out.println("加载头像失败:cancelPotentialDownload");
                 return;
             }
-
+            System.out.println("加载头像失败:continue");
             final LocalOrNetworkChooseWorker newTask = new LocalOrNetworkChooseWorker(view, urlKey,
                     method, isMultiPictures);
             PictureBitmapDrawable downloadedDrawable = new PictureBitmapDrawable(newTask);
+
             view.setImageDrawable(downloadedDrawable);
 
             //listview fast scroll performance
@@ -169,6 +176,12 @@ public class TimeLineBitmapDownloader {
             return null;
         } else {
             return GlobalContext.getInstance().getBitmapCache().get(key);
+        }
+    }
+
+    public static void refreshThemePictureBackground() {
+        synchronized (lock) {
+            instance = new TimeLineBitmapDownloader(new Handler(Looper.getMainLooper()));
         }
     }
 }

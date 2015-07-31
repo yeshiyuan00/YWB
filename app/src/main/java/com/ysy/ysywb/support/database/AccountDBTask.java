@@ -83,4 +83,45 @@ public class AccountDBTask {
         c.close();
         return accountList;
     }
+
+    private static SQLiteDatabase getRsd() {
+        DatabaseHelper databaseHelper = DatabaseHelper.getInstance();
+        return databaseHelper.getReadableDatabase();
+    }
+
+    public static AccountBean getAccount(String id) {
+
+        String sql = "select * from " + AccountTable.TABLE_NAME + " where " + AccountTable.UID
+                + " = " + id;
+        Cursor c = getRsd().rawQuery(sql, null);
+        if (c.moveToNext()) {
+            AccountBean account = new AccountBean();
+            int colid = c.getColumnIndex(AccountTable.OAUTH_TOKEN);
+            account.setAccess_token(c.getString(colid));
+
+            colid = c.getColumnIndex(AccountTable.OAUTH_TOKEN_EXPIRES_TIME);
+            account.setExpires_time(Long.valueOf(c.getString(colid)));
+
+            colid = c.getColumnIndex(AccountTable.BLACK_MAGIC);
+            account.setBlack_magic(c.getInt(colid) == 1);
+
+            colid = c.getColumnIndex(AccountTable.NAVIGATION_POSITION);
+            account.setNavigationPosition(c.getInt(colid));
+
+            Gson gson = new Gson();
+            String json = c.getString(c.getColumnIndex(AccountTable.INFOJSON));
+            try {
+                UserBean value = gson.fromJson(json, UserBean.class);
+                account.setInfo(value);
+            } catch (JsonSyntaxException e) {
+                AppLogger.e(e.getMessage());
+            }
+
+            return account;
+        }
+
+        return null;
+    }
+
+
 }

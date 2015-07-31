@@ -1,9 +1,19 @@
 package com.ysy.ysywb.support.utils;
 
+import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.Signature;
+import android.media.AudioManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
 
+import com.ysy.ysywb.BuildConfig;
 import com.ysy.ysywb.bean.AccountBean;
+import com.ysy.ysywb.support.debug.AppLogger;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -12,6 +22,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -21,10 +33,24 @@ import java.util.concurrent.TimeUnit;
  */
 public class Utility {
 
+    public static void printStackTrace(Exception e) {
+        if (BuildConfig.DEBUG) {
+            e.printStackTrace();
+        }
+    }
+
+    public static boolean isKK() {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
+    }
+
     public static boolean isTokenValid(AccountBean account) {
         return !TextUtils.isEmpty(account.getAccess_token())
                 && (account.getExpires_time() == 0
                 || (System.currentTimeMillis()) < account.getExpires_time());
+    }
+
+    public static boolean isDebugMode() {
+        return BuildConfig.DEBUG;
     }
 
 
@@ -139,5 +165,73 @@ public class Utility {
         return days;
     }
 
+    public static boolean isSystemRinger(Context context) {
+        AudioManager manager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+        return manager.getRingerMode() == AudioManager.RINGER_MODE_NORMAL;
+    }
 
+    public static int dip2px(int dipValue) {
+        float reSize = GlobalContext.getInstance().getResources().getDisplayMetrics().density;
+        return (int) ((dipValue * reSize) + 0.5);
+    }
+
+    public static boolean isConnected(Context context) {
+        ConnectivityManager cm = (ConnectivityManager)
+                context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = cm.getActiveNetworkInfo();
+
+        return networkInfo != null && networkInfo.isConnected();
+    }
+
+    public static boolean isWifi(Context context) {
+        ConnectivityManager cm = (ConnectivityManager)
+                context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = cm.getActiveNetworkInfo();
+        if (networkInfo != null && networkInfo.isConnected()) {
+            if (networkInfo.getType() == ConnectivityManager.TYPE_WIFI) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean isCertificateFingerprintCorrect(Context context) {
+        try {
+            PackageManager pm = context.getPackageManager();
+            String packageName = context.getPackageName();
+            int flags = PackageManager.GET_SIGNATURES;
+
+            PackageInfo packageInfo = pm.getPackageInfo(packageName, flags);
+
+            Signature[] signatures = packageInfo.signatures;
+
+            byte[] cert = signatures[0].toByteArray();
+
+            String strResult = "";
+
+            MessageDigest md;
+
+            md = MessageDigest.getInstance("MD5");
+            md.update(cert);
+            for (byte b : md.digest()) {
+                strResult += Integer.toString(b & 0xff, 16);
+            }
+            strResult = strResult.toUpperCase();
+            //debug
+            if ("DE421D82D4BBF9042886E72AA31FE22".toUpperCase().equals(strResult)) {
+                return false;
+            }
+            //relaease
+            if ("C96155C3DAD4CA1069808FBAC813A69".toUpperCase().equals(strResult)) {
+                return true;
+            }
+            AppLogger.e(strResult);
+        } catch (NoSuchAlgorithmException ex) {
+            ex.printStackTrace();
+        } catch (PackageManager.NameNotFoundException ex) {
+            ex.printStackTrace();
+        }
+
+        return false;
+    }
 }

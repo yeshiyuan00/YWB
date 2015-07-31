@@ -1,6 +1,7 @@
 package com.ysy.ysywb.support.http;
 
 import com.ysy.ysywb.support.error.WeiboException;
+import com.ysy.ysywb.support.file.FileDownloaderHttpHelper;
 
 import java.util.Map;
 
@@ -23,5 +24,11 @@ public class HttpUtility {
             throws WeiboException {
         return new JavaHttpUtility().executeNormalTask(httpMethod, url, param);
 
+    }
+
+    public boolean executeDownloadTask(String url, String path,
+                                       FileDownloaderHttpHelper.DownloadListener downloadListener) {
+        return !Thread.currentThread().isInterrupted() && new JavaHttpUtility()
+                .doGetSaveFile(url, path, downloadListener);
     }
 }

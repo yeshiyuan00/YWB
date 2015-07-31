@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">YWB</string>
+    <string name="app_name">四叶草</string>
+
+    <string name="applicationId">com.ysy.ysywb</string>
 
     <!--drawer menu-->
     <string name="home">首页</string>

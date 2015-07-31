@@ -1,4 +1,4 @@
-package com.ysy.ysywb.ui.interfaces;
+package com.ysy.ysywb.ui.main;
 
 import android.content.Intent;
 import android.nfc.NdefMessage;
@@ -6,10 +6,12 @@ import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
 import android.nfc.NfcEvent;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
 import android.view.ViewConfiguration;
+import android.widget.Toast;
 
+import com.slidingmenu.lib.app.SlidingFragmentActivity;
 import com.ysy.ysywb.support.asyncdrawable.TimeLineBitmapDownloader;
+import com.ysy.ysywb.support.error.WeiboException;
 import com.ysy.ysywb.support.settinghelper.SettingUtility;
 import com.ysy.ysywb.support.utils.GlobalContext;
 
@@ -17,19 +19,21 @@ import java.lang.reflect.Field;
 import java.nio.charset.Charset;
 
 /**
- * Created by ggec5486 on 2015/6/11.
+ * User: qii
+ * Date: 13-1-22
  */
-public class AbstractAppActivity extends FragmentActivity {
+public class MainTimeLineParentActivity extends SlidingFragmentActivity {
 
-
-    protected int theme = 0;
+    private int theme = 0;
 
     @Override
     protected void onResume() {
         super.onResume();
         GlobalContext.getInstance().setCurrentRunningActivity(this);
 
-        if (theme != SettingUtility.getAppTheme()) {
+        if (theme == SettingUtility.getAppTheme()) {
+
+        } else {
             reload();
         }
     }
@@ -48,12 +52,8 @@ public class AbstractAppActivity extends FragmentActivity {
         outState.putInt("theme", theme);
     }
 
-    public TimeLineBitmapDownloader getBitmapDownloader() {
-        return TimeLineBitmapDownloader.getInstance();
-    }
-
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         if (savedInstanceState == null) {
             theme = SettingUtility.getAppTheme();
         } else {
@@ -64,6 +64,7 @@ public class AbstractAppActivity extends FragmentActivity {
         forceShowActionBarOverflowMenu();
         initNFC();
         GlobalContext.getInstance().setActivity(this);
+        TimeLineBitmapDownloader.refreshThemePictureBackground();
     }
 
     private void forceShowActionBarOverflowMenu() {
@@ -77,6 +78,11 @@ public class AbstractAppActivity extends FragmentActivity {
         } catch (Exception ignored) {
 
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
     }
 
     private void initNFC() {
@@ -107,7 +113,7 @@ public class AbstractAppActivity extends FragmentActivity {
         return mimeRecord;
     }
 
-    private void reload() {
+    public void reload() {
         Intent intent = getIntent();
         overridePendingTransition(0, 0);
         intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
@@ -115,6 +121,9 @@ public class AbstractAppActivity extends FragmentActivity {
 
         overridePendingTransition(0, 0);
         startActivity(intent);
-        TimeLineBitmapDownloader.refreshThemePictureBackground();
+    }
+
+    protected void dealWithException(WeiboException e) {
+        Toast.makeText(this, e.getError(), Toast.LENGTH_SHORT).show();
     }
 }

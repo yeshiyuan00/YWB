@@ -18,6 +18,10 @@
         android:largeHeap="true"
         android:theme="@style/AppTheme_Light">
 
+        <meta-data
+            android:name="com.crashlytics.ApiKey"
+            android:value="22c3e094e4bf447e9b89eee57143c5cc5df5c641" />
+
         <activity android:name=".ui.login.AccountActivity"
             android:uiOptions="splitActionBarWhenNarrow">
             <intent-filter>

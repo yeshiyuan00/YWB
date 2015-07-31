@@ -1,7 +1,6 @@
 package com.ysy.ysywb.ui.login;
 
 import android.app.ActionBar;
-import android.app.Activity;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -11,8 +10,6 @@ import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
-import android.support.v4.app.FragmentActivity;
-import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -38,15 +35,9 @@ import com.ysy.ysywb.support.lib.MyAsyncTask;
 import com.ysy.ysywb.support.utils.Utility;
 import com.ysy.ysywb.ui.interfaces.AbstractAppActivity;
 
-import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Created by ggec5486 on 2015/6/8.
@@ -81,23 +72,6 @@ public class OAuthActivity extends AbstractAppActivity {
         cookieManager.removeAllCookie();
 
 
-        Map<String, String> parameters = new HashMap<String, String>();
-        parameters.put("client_id", Utility.rot47("`_edd``d`b"));
-        parameters.put("response_type", "token");
-        parameters.put("redirect_uri", Utility.rot47("9EEADi^^2A:]H6:3@]4@>^@2FE9a^5672F=E]9E>="));
-        parameters.put("display", "mobile");
-
-        webView.loadUrl("https://api.weibo.com/oauth2/authorize?" + Utility.encodeUrl(parameters)
-                + "&scope=friendships_groups_read,friendships_groups_write");
-        String url = "https://api.weibo.com/oauth2/authorize?" +
-                "client_id=468987987&redirect_uri=https://api.weibo.com/oauth2/" +
-                "default.html&scope=friendships_groups_read,friendships_groups_write";
-
-        //webView.loadUrl(url);
-
-        System.out.println("DIRECT_URL=" + Utility.rot47("`_edd``d`b"));
-
-        //webView.loadUrl("http://www.baidu.com");
     }
 
     private class WeiboWebViewClient extends WebViewClient {
