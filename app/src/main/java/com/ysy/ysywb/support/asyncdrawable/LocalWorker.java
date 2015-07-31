@@ -66,7 +66,7 @@ public class LocalWorker extends AbstractWorker<String, Integer, Bitmap>{
     protected Bitmap doInBackground(String... url) {
 
         String path = FileManager.getFilePathFromUrl(data, method);
-
+        System.out.println("path:"+path);
         int height = 0;
         int width = 0;
 

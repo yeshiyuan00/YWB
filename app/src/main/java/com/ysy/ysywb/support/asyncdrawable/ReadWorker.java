@@ -136,6 +136,7 @@ public class ReadWorker extends AbstractWorker<String, Integer, Boolean> {
         }
 
         if (result) {
+
             LocalWorker newTask = null;
 
             if (IWeiciyuanDrawable != null) {

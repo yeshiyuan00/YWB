@@ -87,7 +87,6 @@ public class TaskCache {
             DownloadFutureTask downloadFutureTask = TaskCache.downloadTasks.get(url);
 
             if (downloadFutureTask == null) {
-
                 DownloadFutureTask newDownloadFutureTask = DownloadFutureTask
                         .newInstance(url, method);
                 synchronized (backgroundWifiDownloadPicturesWorkLock) {

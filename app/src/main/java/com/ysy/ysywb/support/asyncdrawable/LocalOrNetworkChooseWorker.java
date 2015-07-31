@@ -77,6 +77,8 @@ public class LocalOrNetworkChooseWorker extends AbstractWorker<String, Integer, 
         }
 
         if (result) {
+
+            System.out.println("图片来自本地");
             LocalWorker newTask = null;
 
             if (IWeiciyuanDrawable != null) {
@@ -94,20 +96,20 @@ public class LocalOrNetworkChooseWorker extends AbstractWorker<String, Integer, 
 
             newTask.executeOnIO();
         } else {
-
             ReadWorker newTask = null;
 
             if (IWeiciyuanDrawable != null) {
+
                 newTask = new ReadWorker(IWeiciyuanDrawable, getUrl(), method,
                         isMultiPictures);
                 PictureBitmapDrawable downloadedDrawable = new PictureBitmapDrawable(newTask);
                 IWeiciyuanDrawable.setImageDrawable(downloadedDrawable);
             } else {
+
                 newTask = new ReadWorker(imageView, getUrl(), method, isMultiPictures);
                 PictureBitmapDrawable downloadedDrawable = new PictureBitmapDrawable(newTask);
                 imageView.setImageDrawable(downloadedDrawable);
             }
-
             newTask.executeOnWaitNetwork();
         }
 
