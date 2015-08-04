@@ -4,7 +4,9 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.Application;
 import android.content.Context;
+import android.content.res.AssetManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Handler;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
@@ -12,13 +14,24 @@ import android.util.LruCache;
 import android.view.Display;
 
 import com.crashlytics.android.Crashlytics;
+import com.ysy.ysywb.R;
 import com.ysy.ysywb.bean.AccountBean;
+import com.ysy.ysywb.bean.GroupListBean;
+import com.ysy.ysywb.bean.UserBean;
+import com.ysy.ysywb.bean.android.MusicInfo;
 import com.ysy.ysywb.support.crashmanager.CrashManager;
 import com.ysy.ysywb.support.crashmanager.CrashManagerConstants;
 import com.ysy.ysywb.support.database.AccountDBTask;
+import com.ysy.ysywb.support.database.GroupDBTask;
 import com.ysy.ysywb.support.settinghelper.SettingUtility;
+import com.ysy.ysywb.support.smileypicker.SmileyMap;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * User: Jiang Qi
@@ -28,6 +41,10 @@ public final class GlobalContext extends Application {
 
     //singleton
     private static GlobalContext globalContext = null;
+
+    private MusicInfo musicInfo = new MusicInfo();
+
+    private GroupListBean group = null;
 
     //image size
     private Activity activity = null;
@@ -42,6 +59,9 @@ public final class GlobalContext extends Application {
     //current account info
     private AccountBean accountBean = null;
 
+    private LinkedHashMap<Integer, LinkedHashMap<String, Bitmap>> emotionsPic
+            = new LinkedHashMap<Integer, LinkedHashMap<String, Bitmap>>();
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -50,7 +70,7 @@ public final class GlobalContext extends Application {
         CrashManagerConstants.loadFromContext(this);
         CrashManager.registerHandler();
         if (Utility.isCertificateFingerprintCorrect(this)) {
-           Crashlytics.start(this);
+            Crashlytics.start(this);
         }
         //registerActivityLifecycleCallbacks(new AppActivityLifecycleCallbacks());
     }
@@ -76,7 +96,6 @@ public final class GlobalContext extends Application {
     }
 
 
-
     public synchronized LruCache<String, Bitmap> getBitmapCache() {
         if (appBitmapCache == null) {
             buildCache();
@@ -97,6 +116,11 @@ public final class GlobalContext extends Application {
                 return bitmap.getByteCount();
             }
         };
+    }
+
+    public static interface MyProfileInfoChangeListener {
+
+        public void onChange(UserBean newUserBean);
     }
 
     public String getCurrentAccountName() {
@@ -144,5 +168,85 @@ public final class GlobalContext extends Application {
             }
         }
     }
+
+    public void updateMusicInfo(MusicInfo musicInfo) {
+        this.musicInfo = musicInfo;
+    }
+
+    public void setGroup(GroupListBean group) {
+        this.group = group;
+    }
+
+    public void setAccountBean(final AccountBean accountBean) {
+        this.accountBean = accountBean;
+    }
+
+    public synchronized Map<String, Bitmap> getEmotionsPics() {
+        if (emotionsPic != null && emotionsPic.size() > 0) {
+            return emotionsPic.get(SmileyMap.GENERAL_EMOTION_POSITION);
+        } else {
+            getEmotionsTask();
+            return emotionsPic.get(SmileyMap.GENERAL_EMOTION_POSITION);
+        }
+    }
+
+    private void getEmotionsTask() {
+        Map<String, String> general = SmileyMap.getInstance().getGeneral();
+        emotionsPic.put(SmileyMap.GENERAL_EMOTION_POSITION, getEmotionsTask(general));
+        Map<String, String> huahua = SmileyMap.getInstance().getHuahua();
+        emotionsPic.put(SmileyMap.HUAHUA_EMOTION_POSITION, getEmotionsTask(huahua));
+    }
+
+    private LinkedHashMap<String, Bitmap> getEmotionsTask(Map<String, String> emotionMap) {
+        List<String> index = new ArrayList<String>();
+        index.addAll(emotionMap.keySet());
+        LinkedHashMap<String, Bitmap> bitmapMap = new LinkedHashMap<String, Bitmap>();
+        for (String str : index) {
+            String name = emotionMap.get(str);
+            AssetManager assetManager = GlobalContext.getInstance().getAssets();
+            InputStream inputStream;
+            try {
+                inputStream = assetManager.open(name);
+                Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+                if (bitmap != null) {
+                    Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap,
+                            Utility.dip2px(getResources().getInteger(R.integer.emotion_size)),
+                            Utility.dip2px(getResources().getInteger(R.integer.emotion_size)),
+                            true);
+                    if (bitmap != scaledBitmap) {
+                        bitmap.recycle();
+                        bitmap = scaledBitmap;
+                    }
+                    bitmapMap.put(str, bitmap);
+                }
+            } catch (IOException ignored) {
+
+            }
+        }
+
+        return bitmapMap;
+    }
+
+    public synchronized Map<String, Bitmap> getHuahuaPics() {
+        if (emotionsPic != null && emotionsPic.size() > 0) {
+            return emotionsPic.get(SmileyMap.HUAHUA_EMOTION_POSITION);
+        } else {
+            getEmotionsTask();
+            return emotionsPic.get(SmileyMap.HUAHUA_EMOTION_POSITION);
+        }
+    }
+
+    public GroupListBean getGroup() {
+        if (group == null) {
+            group = GroupDBTask.get(GlobalContext.getInstance().getCurrentAccountId());
+        }
+        return group;
+    }
+
+    public String getCurrentAccountId() {
+        return getAccountBean().getUid();
+    }
+
+
 }
 

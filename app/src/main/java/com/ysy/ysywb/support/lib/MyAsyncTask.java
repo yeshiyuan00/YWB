@@ -489,7 +489,7 @@ public abstract class MyAsyncTask<Params, Progress, Result> {
      * @throws IllegalStateException If {@link #getStatus()} returns either
      *                               {@link AsyncTask.Status#RUNNING} or {@link AsyncTask.Status#FINISHED}.
      */
-    public final MyAsyncTask<Params, Progress, Result> executeOnExecutor(Executor exec,
+    public final MyAsyncTask<Params, Progress, Result>  executeOnExecutor(Executor exec,
             Params... params) {
         if (mStatus != Status.PENDING) {
             switch (mStatus) {

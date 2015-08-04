@@ -22,7 +22,8 @@
             android:name="com.crashlytics.ApiKey"
             android:value="22c3e094e4bf447e9b89eee57143c5cc5df5c641" />
 
-        <activity android:name=".ui.login.AccountActivity"
+        <activity
+            android:name=".ui.login.AccountActivity"
             android:uiOptions="splitActionBarWhenNarrow">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -31,6 +32,8 @@
         </activity>
 
         <activity android:name=".ui.login.OAuthActivity" />
+
+        <activity android:name=".ui.main.MainTimeLineActivity" />
 
     </application>
 

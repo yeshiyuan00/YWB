@@ -30,6 +30,7 @@ import com.ysy.ysywb.support.lib.changelogdialog.ChangeLogDialog;
 import com.ysy.ysywb.support.settinghelper.SettingUtility;
 import com.ysy.ysywb.support.utils.Utility;
 import com.ysy.ysywb.ui.interfaces.AbstractAppActivity;
+import com.ysy.ysywb.ui.main.MainTimeLineActivity;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -189,10 +190,10 @@ public class AccountActivity extends AbstractAppActivity implements
                 showAddAccountDialog();
                 return;
             }
-//            Intent intent = MainTimeLineActivity.newIntent(accountList.get(position));
-//            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-//            startActivity(intent);
-//            finish();
+            Intent intent = MainTimeLineActivity.newIntent(accountList.get(position));
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(intent);
+            finish();
             Toast.makeText(AccountActivity.this, "正在开发中。。。", Toast.LENGTH_SHORT).show();
         }
     }

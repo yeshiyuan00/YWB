@@ -9,7 +9,12 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.DialogFragment;
+import android.support.v4.app.FragmentActivity;
 import android.text.TextUtils;
+import android.view.HapticFeedbackConstants;
+import android.view.View;
+import android.widget.ListView;
 
 import com.ysy.ysywb.BuildConfig;
 import com.ysy.ysywb.bean.AccountBean;
@@ -32,6 +37,122 @@ import java.util.concurrent.TimeUnit;
  * Created by ggec5486 on 2015/6/9.
  */
 public class Utility {
+
+    //the position within the adapter's data set, will plus header view count
+    public static void setListViewAdapterPosition(final ListView listView,
+                                                  final int adapterItemPosition, final int top, final Runnable runnable) {
+
+        listView.setSelectionFromTop(adapterItemPosition + listView.getHeaderViewsCount(), top);
+        AppLogger.i("ListView scrollTo " + (adapterItemPosition + listView.getHeaderViewsCount())
+                + " offset " + top);
+        if (runnable != null) {
+            runnable.run();
+        }
+    }
+
+    public static void stopListViewScrollingAndScrollToTop(ListView listView) {
+        Runnable runnable = JavaReflectionUtility.getValue(listView, "mFlingRunnable");
+        listView.removeCallbacks(runnable);
+        listView.setSelection(Math.min(listView.getFirstVisiblePosition(), 5));
+        listView.smoothScrollToPosition(0);
+    }
+
+    //long click link(schedule show dialog event), press home button(onPause onSaveInstance), show dialog,then crash....
+    //executePendingTransactions still occur crash
+    public static void forceShowDialog(FragmentActivity activity, DialogFragment dialogFragment) {
+        try {
+            dialogFragment.show(activity.getSupportFragmentManager(), "");
+            activity.getSupportFragmentManager().executePendingTransactions();
+        } catch (Exception ignored) {
+
+        }
+    }
+
+    public static void vibrate(Context context, View view) {
+//        Vibrator vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+//        vibrator.vibrate(30);
+        view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+    }
+
+    public static String getDomainFromWeiboAccountLink(String url) {
+        url = convertWeiboCnToWeiboCom(url);
+
+        final String NORMAL_DOMAIN_PREFIX = "http://weibo.com/";
+        final String ENTERPRISE_DOMAIN_PREFIX = "http://e.weibo.com/";
+
+        if (TextUtils.isEmpty(url)) {
+            throw new IllegalArgumentException("Url can't be empty");
+        }
+
+        if (!url.startsWith(NORMAL_DOMAIN_PREFIX) && !url.startsWith(ENTERPRISE_DOMAIN_PREFIX)) {
+            throw new IllegalArgumentException(
+                    "Url must start with " + NORMAL_DOMAIN_PREFIX + " or "
+                            + ENTERPRISE_DOMAIN_PREFIX);
+        }
+
+        String domain = null;
+        if (url.startsWith(ENTERPRISE_DOMAIN_PREFIX)) {
+            domain = url.substring(ENTERPRISE_DOMAIN_PREFIX.length());
+        } else if (url.startsWith(NORMAL_DOMAIN_PREFIX)) {
+            domain = url.substring(NORMAL_DOMAIN_PREFIX.length());
+        }
+        domain = domain.replace("/", "");
+        return domain;
+    }
+
+    //todo need refactor...
+    public static boolean isWeiboAccountDomainLink(String url) {
+        if (TextUtils.isEmpty(url)) {
+            return false;
+        } else {
+            url = convertWeiboCnToWeiboCom(url);
+            boolean a = url.startsWith("http://weibo.com/") || url
+                    .startsWith("http://e.weibo.com/");
+            boolean b = !url.contains("?");
+
+            String tmp = url;
+            if (tmp.endsWith("/")) {
+                tmp = tmp.substring(0, tmp.lastIndexOf("/"));
+            }
+
+            int count = 0;
+            char[] value = tmp.toCharArray();
+            for (char c : value) {
+                if ("/".equalsIgnoreCase(String.valueOf(c))) {
+                    count++;
+                }
+            }
+            return a && b && count == 3 && !"http://weibo.com/pub".equals(tmp);
+        }
+    }
+
+    public static String getIdFromWeiboAccountLink(String url) {
+
+        url = convertWeiboCnToWeiboCom(url);
+
+        String id = url.substring("http://weibo.com/u/".length());
+        id = id.replace("/", "");
+        return id;
+    }
+
+    public static boolean isWeiboAccountIdLink(String url) {
+        url = convertWeiboCnToWeiboCom(url);
+
+        return !TextUtils.isEmpty(url) && url.startsWith("http://weibo.com/u/");
+    }
+
+    private static String convertWeiboCnToWeiboCom(String url) {
+        if (!TextUtils.isEmpty(url)) {
+            if (url.startsWith("http://weibo.cn")) {
+                url = url.replace("http://weibo.cn", "http://weibo.com");
+            } else if (url.startsWith("http://www.weibo.com")) {
+                url = url.replace("http://www.weibo.com", "http://weibo.com");
+            } else if (url.startsWith("http://www.weibo.cn")) {
+                url = url.replace("http://www.weibo.cn", "http://weibo.com");
+            }
+        }
+        return url;
+    }
 
     public static void printStackTrace(Exception e) {
         if (BuildConfig.DEBUG) {

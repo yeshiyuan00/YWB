@@ -46,4 +46,5 @@ dependencies {
     compile 'com.android.support:appcompat-v7:22.2.0'
     compile project(':slidingmenulibrary')
     compile 'com.crashlytics.android:crashlytics:1.1.11'
+    compile 'com.github.amlcurran.showcaseview:library:5.0.0'
 }
